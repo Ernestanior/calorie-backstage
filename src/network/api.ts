@@ -101,11 +101,27 @@ export function recipeModify(data:any) {
   });
 }
 
+export function recipeRefreshCover(data:any) {
+  return request({
+    method: 'put',
+    url: '/recipe/refresh/cover',
+    data
+  });
+}
+
 export function fileUpload(data:any) {
     return request({
       method: 'put',
       url: '/file/upload',
       type:'formData',
       data
+    });
+  }
+
+  export function imgGenerate(params:any) {
+    return request({
+      method: 'put',
+      url: '/image/generate',
+      params,
     });
   }

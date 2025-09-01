@@ -30,6 +30,12 @@ const SideBar:FC = () => {
             label: "食谱计划",
             role:[E_USER_TYPE.ADMIN],
         },
+        {
+            key:"/imgGenerate",
+            icon:<ShopOutlined /> ,
+            label: "字生图",
+            role:[E_USER_TYPE.ADMIN],
+        },
     ]
 
     const onSelect=(e:any)=>{

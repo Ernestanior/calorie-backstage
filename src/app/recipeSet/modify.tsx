@@ -17,10 +17,10 @@ interface IProps {
     onRefresh: any;
 }
 let index = 0
-const FoodModify: FC<IProps> = ({ data, visible, onRefresh, onCancel }) => {
+const RecipeSetModify: FC<IProps> = ({ data, visible, onRefresh, onCancel }) => {
     const [form] = useForm()
     const [errorMsg, setErrMsg] = useState<string>('')
-    const [image,setImage] = useState<UploadFile[]>([])
+    const [image, setImage] = useState<UploadFile[]>([])
     const inputRef = useRef<InputRef>(null);
     const [label, setLabel] = useState<string>()
     const [labelList, setLabelList] = useState<string[]>(initlabels)
@@ -45,7 +45,9 @@ const FoodModify: FC<IProps> = ({ data, visible, onRefresh, onCancel }) => {
 
     const onSubmit = async () => {
         const newData = form.getFieldsValue()
-        const { day, hot, name, type, nameEn, weight, labelList,color } = newData
+        const { day, hot, name, type, nameEn, weight, labelList, color, visible } = newData
+        console.log(newData,'newData');
+        
         if (!name || !nameEn || !day || !hot || !weight || !type || !color || !labelList.length) {
             setErrMsg('* 请填写完整')
             return
@@ -59,15 +61,15 @@ const FoodModify: FC<IProps> = ({ data, visible, onRefresh, onCancel }) => {
             image.forEach(img => {
                 imgFormData.append('file', img.originFileObj as RcFile);
             });
-            const imageUrl = await fileUpload(imgFormData as any);
+            const previewPhoto = await fileUpload(imgFormData as any);
             params = {
-                id:newData.id, day, hot, type, weight, name, nameEn,color, labelList: labelList.map((index: number) => initlabels[index]), labelEnList: labelList.map((index: number) => initlabelsEn[index]),
-                imageUrl
-              }
-        }else{
+                id: newData.id, day, hot, type, weight, name, nameEn, color, visible, labelList: labelList.map((index: number) => initlabels[index]), labelEnList: labelList.map((index: number) => initlabelsEn[index]),
+                previewPhoto
+            }
+        } else {
             params = {
-                id:newData.id, day, hot, type, weight, name, nameEn,color, labelList: labelList.map((index: number) => initlabels[index]), labelEnList: labelList.map((index: number) => initlabelsEn[index])
-              }
+                id: newData.id, day, hot, type, weight, name, nameEn, color, visible, labelList: labelList.map((index: number) => initlabels[index]), labelEnList: labelList.map((index: number) => initlabelsEn[index])
+            }
         }
 
         const res = await recipeSetModify(params)
@@ -76,7 +78,7 @@ const FoodModify: FC<IProps> = ({ data, visible, onRefresh, onCancel }) => {
     }
 
     return (
-        <Drawer title="新增食谱" width={900} onClose={onCancel} open={visible}>
+        <Drawer title="修改食谱" width={900} onClose={onCancel} open={visible}>
             <Form form={form} >
                 <Form.Item name={'id'} label="id" required>
                     <Input style={{ width: 350 }} disabled />
@@ -87,13 +89,24 @@ const FoodModify: FC<IProps> = ({ data, visible, onRefresh, onCancel }) => {
                 <Form.Item name={'nameEn'} label="食谱英文名" required>
                     <Input style={{ width: 350 }} />
                 </Form.Item>
-                <Form.Item name={'type'} label="减重/增重" required>
-                    <Select
-                        style={{ width: 150, marginRight: 50 }}
-                        placeholder="Please select"
-                        options={weightType}
-                    />
-                </Form.Item>
+                <div className="flex flex-row mb-5 items-center">
+
+                    <Form.Item name={'type'} label="减重/增重" required>
+                        <Select
+                            style={{ width: 150, marginRight: 50 }}
+                            placeholder="Please select"
+                            options={weightType}
+                        />
+                    </Form.Item>
+                    <Form.Item name={'visible'} label="隐藏/显示" required>
+                        <Select
+                            style={{ width: 150, marginRight: 50 }}
+                            placeholder="Please select"
+                            options={[{ label: '显示', value: 1 }, { label: '隐藏', value: 0 }]}
+                        />
+                    </Form.Item>
+                </div>
+
                 <div className="flex flex-row mb-5">
                     <Form.Item name={'day'} label="计划时长" required>
                         <Select
@@ -112,12 +125,12 @@ const FoodModify: FC<IProps> = ({ data, visible, onRefresh, onCancel }) => {
                     </Form.Item>
                 </div>
 
-                    <div className="flex flex-row mb-5">
+                <div className="flex flex-row mb-5">
                     <Form.Item name={'hot'} label="热度" required>
-                        <InputNumber style={{ width: 150 , marginRight: 50}} />
+                        <InputNumber style={{ width: 150, marginRight: 50 }} />
                     </Form.Item>
                     <Form.Item name={'color'} label="颜色" required>
-                        <Input style={{width:150}}/>
+                        <Input style={{ width: 150 }} />
                     </Form.Item>
                 </div>
 
@@ -148,7 +161,7 @@ const FoodModify: FC<IProps> = ({ data, visible, onRefresh, onCancel }) => {
                     </FormItem>
                 </div>
                 <div className="flex flex-row mb-5">
-                    <Image alt="" src={img_url+data.previewPhoto} width={200}  />
+                    <Image alt="" src={img_url + data.previewPhoto} width={200} />
                     <div className="text-sm font-bold ml-15 mr-5">修改图片</div>
                     <ImageUpload changePic={setImage} maxCount={1} ></ImageUpload>
                 </div>
@@ -160,5 +173,5 @@ const FoodModify: FC<IProps> = ({ data, visible, onRefresh, onCancel }) => {
 };
 
 
-export default FoodModify;
+export default RecipeSetModify;
 

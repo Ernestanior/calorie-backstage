@@ -30,14 +30,14 @@ const FoodCreate: FC<IProps> = ({ visible, onRefresh, onCancel,data,recipeSetId 
     const onSubmit = async () => {
         const newData = form.getFieldsValue()
         
-        const { day,mealType,foodNutritionId,quantity} = newData
+        // const { day,mealType,foodNutritionId,quantity} = newData
         
-        if ( !day || !mealType || !foodNutritionId || !quantity) {
-            setErrMsg('* 请填写完整')
-            return
-        } else {
-            setErrMsg('')
-        }
+        // if ( !day || !mealType || !foodNutritionId || !quantity) {
+        //     setErrMsg('* 请填写完整')
+        //     return
+        // } else {
+        //     setErrMsg('')
+        // }
         const res = await recipeModify({...newData,recipeSetId})
         console.log(res);
         onCancel()

@@ -1,5 +1,5 @@
 'use client';
-import React, { FC, useCallback, useEffect, useState } from 'react';
+import React, { FC, Suspense, useCallback, useEffect, useState } from 'react';
 import { Button, Space, Tag, message,Image } from 'antd';
 import Query from './query';
 import Filter from '@/components/form/filter';
@@ -14,7 +14,7 @@ import FoodCoverCreate from './createCover';
 
 
 
-const Recipe: FC = () => {
+const RecipeContent: FC = () => {
   const searchParams = useSearchParams();
   const recipeSetId = parseInt(searchParams.get('id') as string);
   
@@ -94,6 +94,11 @@ const Recipe: FC = () => {
     {
       title: '计划id',
       dataIndex: 'recipeSetId',
+    },
+    {
+      title: '第几天',
+      dataIndex: 'day',
+
     },
     {
       title: '早/中/晚餐',
@@ -178,7 +183,7 @@ const Recipe: FC = () => {
           新增食谱
         </Button>
         <Button type="primary" onClick={() => setCreateCoverFlag(true)} className="mr-5">
-          新增早中晚餐封面
+          生成早中晚餐封面
         </Button>
         <Filter submit={handleFilter}>
           <Query />
@@ -215,6 +220,14 @@ const Recipe: FC = () => {
         onRefresh={refresh}
       />
     </section>
+  );
+};
+
+const Recipe: FC = () => {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <RecipeContent />
+    </Suspense>
   );
 };
 

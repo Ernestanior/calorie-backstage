@@ -4,12 +4,13 @@ import { Button, Space, Tag, message,Image } from 'antd';
 import Query from './query';
 import Filter from '@/components/form/filter';
 import FoodCreate from './create';
-import FoodModify from './modify';
 import { recipeSetDelete, recipeSetPage } from '@/network/api';
 import { img_url } from '@/network';
 import PaginatedTable from '@/components/paginatedTable';
 import { weightList } from './config';
 import { useRouter } from 'next/navigation';
+import RecipeSetModify from './modify';
+import RecipeSetCreate from './create';
 
 const RecipeSet: FC = () => {
   const router = useRouter();
@@ -105,6 +106,12 @@ const RecipeSet: FC = () => {
       ),
     },
     {
+      title: '隐藏/显示',
+      dataIndex: 'visible',
+      render: (value: any) => value==1?"显示":"隐藏"
+
+    },
+    {
       title: '类型',
       dataIndex: 'type',
       render: (value: any) => value==1?"减重":"增重"
@@ -186,12 +193,12 @@ const RecipeSet: FC = () => {
         loading={loading}
       />
 
-      <FoodCreate
+      <RecipeSetCreate
         visible={createFlag}
         onCancel={() => setCreateFlag(false)}
         onRefresh={refresh}
       />
-      <FoodModify
+      <RecipeSetModify
         visible={modifyFlag}
         data={modifyItem}
         onCancel={() => setModifyFlag(false)}
