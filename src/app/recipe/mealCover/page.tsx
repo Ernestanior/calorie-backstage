@@ -1,10 +1,10 @@
-'use client';
+"use client";
 
-import React, { FC, useEffect, useMemo, useState } from 'react';
-import { Card, Col, Empty, Image, Row, Spin, Tag } from 'antd';
-import { useSearchParams } from 'next/navigation';
-import { recipeMealItemPage } from '@/network/api';
-import { mealTypeList } from '../config';
+import React, { FC, Suspense, useEffect, useMemo, useState } from "react";
+import { Card, Col, Empty, Image, Row, Spin, Tag } from "antd";
+import { useSearchParams } from "next/navigation";
+import { recipeMealItemPage } from "@/network/api";
+import { mealTypeList } from "../config";
 
 interface MealCoverItem {
   day: number;
@@ -12,7 +12,8 @@ interface MealCoverItem {
   coverUrl?: string;
 }
 
-const MealCoverPage: FC = () => {
+// 真正包含 useSearchParams 等客户端逻辑的内容组件
+const MealCoverContent: FC = () => {
   const searchParams = useSearchParams();
   const recipeSetIdParam = searchParams.get('id');
   const recipeSetId = recipeSetIdParam ? parseInt(recipeSetIdParam, 10) : NaN;
@@ -126,6 +127,15 @@ const MealCoverPage: FC = () => {
         )}
       </Spin>
     </div>
+  );
+};
+
+// 导出时用 Suspense 包裹，满足 Next.js 对 useSearchParams 的要求
+const MealCoverPage: FC = () => {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <MealCoverContent />
+    </Suspense>
   );
 };
 
