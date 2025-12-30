@@ -1,17 +1,16 @@
 'use client';
 import React, { FC, useCallback, useEffect, useState } from 'react';
-import { Button, Drawer, Space, Tag, Image, message } from 'antd';
+import { Space, Tag, Image, message } from 'antd';
 import Query from './query';
 import Filter from '@/components/form/filter';
 import FoodCreate from './create';
 import FoodModify from './modify';
 import { foodDelete, foodPage } from '@/network/api';
 import { foodList, heatList } from './config';
-import { img_url } from '@/network';
 import PaginatedTable from '@/components/paginatedTable';
 
 const FoodListTemplate: FC = () => {
-  const [data, setData] = useState([]);
+  const [data, setData] = useState<any[]>([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
@@ -33,8 +32,23 @@ const FoodListTemplate: FC = () => {
           sort: '',
         },
       });
-      setData(res.content || []);
-      setTotal(res.totalElements || 0);
+      // 后端通过 ok(payload) 返回的数据结构为 { code, data: { number, size, totalPages, numberOfElements, totalElements, content } }
+      const pageData = (res as any).data ?? res;
+      const records = pageData?.content ?? [];
+      const totalCount = pageData?.totalElements ?? 0;
+      const serverPage = (pageData?.number ?? 0) + 1; // 后端从 0 开始
+      const serverPageSize = pageData?.size ?? pageSize;
+
+      // 将后端的 `type` 字段映射为前端展示用的 `types`，方便表格和表单复用
+      const mapped = (records as any[]).map((item) => ({
+        ...item,
+        types: item.type ?? item.types,
+      }));
+
+      setData(mapped);
+      setTotal(totalCount);
+      setPage(serverPage);
+      setPageSize(serverPageSize);
     } catch (e) {
       message.error('获取数据失败');
     } finally {
@@ -72,27 +86,41 @@ const FoodListTemplate: FC = () => {
 
   const columns = [
     {
-        title: 'id',
-        dataIndex: 'id',
-        width: 120,
-      },
+      title: 'ID',
+      dataIndex: 'id',
+      width: 80,
+    },
     {
-      title: '图',
+      title: '图片',
       dataIndex: 'imageUrl',
-      width: 150,
+      width: 120,
       render: (url: string) => (
         <Image
-          src={img_url + url}
-          alt=""
-          width={150}
-          style={{ height: 'auto' }}
-          preview={{ src: img_url + url }}
+          src={url}
+          alt="菜品图片"
+          width={100}
+          height={100}
+          style={{ 
+            height: 100,
+            objectFit: 'cover',
+            borderRadius: 8,
+            border: '1px solid #f0f0f0',
+          }}
+          preview={{ 
+            src: url,
+            mask: '预览',
+          }}
         />
       ),
     },
     {
       title: '菜名',
       dataIndex: 'name',
+      width: 120,
+    },
+    {
+      title: '英文名',
+      dataIndex: 'nameEn',
       width: 120,
     },
     {
@@ -103,10 +131,16 @@ const FoodListTemplate: FC = () => {
     {
       title: '类型',
       dataIndex: 'types',
-      render: (value: number[]) =>
-        foodList
-          .filter((item) => value?.includes(item.value))
-          .map((item) => <Tag key={item.value}>{item.label}</Tag>),
+      width: 200,
+      render: (value: number[]) => (
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
+          {foodList
+            .filter((item) => value?.includes(item.value))
+            .map((item) => (
+              <Tag key={item.value} color="blue">{item.label}</Tag>
+            ))}
+        </div>
+      ),
     },
     {
       title: '单位',
@@ -115,8 +149,9 @@ const FoodListTemplate: FC = () => {
     {
       title: '每份含量',
       dataIndex: 'content',
+      width: 200,
       render: (_: any, item: any) => (
-        <div className="flex flex-col">
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
           <Tag color="magenta">卡路里：{item.caloriesPerUnit}</Tag>
           <Tag color="green">蛋白质：{item.carbsPerUnit}</Tag>
           <Tag color="gold">脂肪：{item.fatPerUnit}</Tag>
@@ -127,8 +162,9 @@ const FoodListTemplate: FC = () => {
     {
       title: '每100克含量',
       dataIndex: 'unit',
+      width: 200,
       render: (_: any, item: any) => (
-        <div className="flex flex-col">
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
           <Tag color="magenta">卡路里：{item.caloriesPer100gram}</Tag>
           <Tag color="green">蛋白质：{item.carbsPer100gram}</Tag>
           <Tag color="gold">脂肪：{item.fatPer100gram}</Tag>
@@ -139,30 +175,30 @@ const FoodListTemplate: FC = () => {
     {
       title: '操作',
       key: 'action',
+      width: 150,
+      fixed: 'right' as const,
+      className: 'action-cell',
       render: (_: any, item: any) => (
         <Space size="middle">
-          <div onClick={() => onModify(item)} className="text-blue-500 cursor-pointer">
+          <span 
+            onClick={() => onModify(item)} 
+            className="action-link"
+          >
             修改
-          </div>
-          <div onClick={() => onDelete(item.id)} className="text-blue-500 cursor-pointer">
+          </span>
+          <span 
+            onClick={() => onDelete(item.id)} 
+            className="action-link danger"
+          >
             删除
-          </div>
+          </span>
         </Space>
       ),
     },
   ];
 
   return (
-    <section>
-      <div className="flex mb-4">
-        <Button type="primary" onClick={() => setCreateFlag(true)} className="mr-5">
-          新增食谱
-        </Button>
-        <Filter submit={handleFilter}>
-          <Query />
-        </Filter>
-      </div>
-
+    <div>
       <PaginatedTable
         columns={columns}
         data={data}
@@ -171,8 +207,21 @@ const FoodListTemplate: FC = () => {
         pageSize={pageSize}
         onPageChange={handlePageChange}
         loading={loading}
+        layout={{
+          
+          actions: {
+            primary: {
+              label: '新增菜品',
+              onClick: () => setCreateFlag(true),
+            },
+          },
+          filter: (
+            <Filter submit={handleFilter}>
+              <Query />
+            </Filter>
+          ),
+        }}
       />
-
       <FoodCreate
         visible={createFlag}
         onCancel={() => setCreateFlag(false)}
@@ -184,7 +233,7 @@ const FoodListTemplate: FC = () => {
         onCancel={() => setModifyFlag(false)}
         onRefresh={refresh}
       />
-    </section>
+    </div>
   );
 };
 

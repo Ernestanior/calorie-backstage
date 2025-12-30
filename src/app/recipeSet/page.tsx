@@ -1,11 +1,10 @@
 'use client';
 import React, { FC, useCallback, useEffect, useState } from 'react';
-import { Button, Space, Tag, message,Image } from 'antd';
+import { Space, Tag, message,Image } from 'antd';
 import Query from './query';
 import Filter from '@/components/form/filter';
 import FoodCreate from './create';
 import { recipeSetDelete, recipeSetPage } from '@/network/api';
-import { img_url } from '@/network';
 import PaginatedTable from '@/components/paginatedTable';
 import { weightList } from './config';
 import { useRouter } from 'next/navigation';
@@ -36,9 +35,23 @@ const RecipeSet: FC = () => {
           sort: '',
         },
       });
-      
-      setData(res.content || []);
-      setTotal(res.totalElements || 0);
+      const content = res?.content || res?.data?.content || [];
+      const total =
+        typeof res?.total === 'number'
+          ? res.total
+          : typeof res?.data?.total === 'number'
+          ? res.data.total
+          : res?.totalElements || 0;
+
+      // 后端现在返回的是 label/labelEn 数组，这里映射成现有表格使用的 labelList/labelEnList 字段
+      const mapped = content.map((item: any) => ({
+        ...item,
+        labelList: item.label ?? item.labelList,
+        labelEnList: item.labelEn ?? item.labelEnList,
+      }));
+
+      setData(mapped);
+      setTotal(total);
     } catch (e) {
       message.error('获取数据失败');
     } finally {
@@ -92,16 +105,25 @@ const RecipeSet: FC = () => {
       dataIndex: 'nameEn',
     },
     {
-      title: '图',
+      title: '预览图',
       dataIndex: 'previewPhoto',
-      width: 150,
+      width: 120,
       render: (url: string) => (
         <Image
-          src={img_url + url}
-          alt=""
-          width={150}
-          style={{ height: 'auto' }}
-          preview={{ src: img_url + url }}
+          src={url}
+          alt="食谱预览图"
+          width={100}
+          height={100}
+          style={{ 
+            height: 100,
+            objectFit: 'cover',
+            borderRadius: 8,
+            border: '1px solid #f0f0f0',
+          }}
+          preview={{ 
+            src: url,
+            mask: '预览',
+          }}
         />
       ),
     },
@@ -144,45 +166,62 @@ const RecipeSet: FC = () => {
     {
       title: '英文标签',
       dataIndex: 'labelEnList',
-      render: (value: any) => value && value.map((item:String)=><Tag>{item}</Tag>)
+      width: 200,
+      render: (value: any) => (
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
+          {value && value.map((item: String, index: number) => (
+            <Tag key={index} color="purple">{item}</Tag>
+          ))}
+        </div>
+      ),
     },
     {
       title: '标签',
       dataIndex: 'labelList',
-      render: (value: any) => value && value.map((item:String)=><Tag>{item}</Tag>)
+      width: 200,
+      render: (value: any) => (
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
+          {value && value.map((item: String, index: number) => (
+            <Tag key={index} color="cyan">{item}</Tag>
+          ))}
+        </div>
+      ),
     },
 
     
     {
       title: '操作',
       key: 'action',
+      width: 180,
+      fixed: 'right' as const,
+      className: 'action-cell',
       render: (_: any, item: any) => (
         <Space size="middle">
-          <div onClick={() => onDetail(item.id)} className="text-blue-500 cursor-pointer">
+          <span 
+            onClick={() => onDetail(item.id)} 
+            className="action-link"
+          >
             详情
-          </div>
-          <div onClick={() => onModify(item)} className="text-blue-500 cursor-pointer">
+          </span>
+          <span 
+            onClick={() => onModify(item)} 
+            className="action-link"
+          >
             修改
-          </div>
-          <div onClick={() => onDelete(item.id)} className="text-blue-500 cursor-pointer">
+          </span>
+          <span 
+            onClick={() => onDelete(item.id)} 
+            className="action-link danger"
+          >
             删除
-          </div>
+          </span>
         </Space>
       ),
     },
   ];
 
   return (
-    <section>
-      <div className="flex mb-4">
-        <Button type="primary" onClick={() => setCreateFlag(true)} className="mr-5">
-          新增食谱
-        </Button>
-        <Filter submit={handleFilter}>
-          <Query />
-        </Filter>
-      </div>
-
+    <div>
       <PaginatedTable
         columns={columns}
         data={data}
@@ -191,8 +230,21 @@ const RecipeSet: FC = () => {
         pageSize={pageSize}
         onPageChange={handlePageChange}
         loading={loading}
+        layout={{
+          
+          actions: {
+            primary: {
+              label: '新增食谱计划',
+              onClick: () => setCreateFlag(true),
+            },
+          },
+          filter: (
+            <Filter submit={handleFilter}>
+              <Query />
+            </Filter>
+          ),
+        }}
       />
-
       <RecipeSetCreate
         visible={createFlag}
         onCancel={() => setCreateFlag(false)}
@@ -204,7 +256,7 @@ const RecipeSet: FC = () => {
         onCancel={() => setModifyFlag(false)}
         onRefresh={refresh}
       />
-    </section>
+    </div>
   );
 };
 

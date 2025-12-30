@@ -1,10 +1,10 @@
 //axios封装
 import axios from 'axios';
 
-export const img_url = 'https://www.xyvnai.com'
-export const init_url = 'https://www.xyvnai.com/api'
-// export const init_url = 'http://10.10.20.34:9304/api'
-// export const img_url = 'http://10.10.20.34:9304'
+// export const img_url = 'https://www.xyvnai.com'
+export const init_url = 'https://api.xyvnai.com/api'
+// export const init_url = 'http://127.0.0.1:8787/api';
+
 
 const request = (option: any,pass=false,type='data') => {
   return new Promise(async (resolve, reject) => {

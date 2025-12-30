@@ -6,7 +6,6 @@ import { useForm } from "antd/es/form/Form";
 import { PlusOutlined } from "@ant-design/icons";
 import FormItem from "antd/es/form/FormItem";
 import { initlabels, initlabelsEn, timeList, weightList, weightType } from "./config";
-import { img_url } from "@/network";
 import ImageUpload from "@/components/ImageUpload";
 import { RcFile } from "antd/es/upload";
 
@@ -27,10 +26,14 @@ const RecipeSetModify: FC<IProps> = ({ data, visible, onRefresh, onCancel }) => 
 
     useEffect(() => {
         if (data) {
-            form.setFieldsValue({ ...data, labelList: data.labelList?.map((item: string) => initlabels.indexOf(item)) })
-        }
-        else {
-            form.setFieldsValue({})
+            // 后端现在返回的是 label: string[]，这里根据标签文本映射成下拉的索引值
+            const labels: string[] = (data as any).label || (data as any).labelList || [];
+            form.setFieldsValue({
+                ...data,
+                labelList: labels.map((item: string) => initlabels.indexOf(item)),
+            });
+        } else {
+            form.setFieldsValue({});
         }
     }, [form, data])
 
@@ -161,7 +164,7 @@ const RecipeSetModify: FC<IProps> = ({ data, visible, onRefresh, onCancel }) => 
                     </FormItem>
                 </div>
                 <div className="flex flex-row mb-5">
-                    <Image alt="" src={img_url + data.previewPhoto} width={200} />
+                    <Image alt="" src={data.previewPhoto} width={200} />
                     <div className="text-sm font-bold ml-15 mr-5">修改图片</div>
                     <ImageUpload changePic={setImage} maxCount={1} ></ImageUpload>
                 </div>

@@ -53,6 +53,9 @@ const FoodCreate: FC<IProps> = ({visible,onRefresh,onCancel}) => {
                     <Form.Item name={'name'} label="菜名" required>
                         <Input style={{width:150,marginRight:50}}/>
                     </Form.Item>
+                    <Form.Item name={'nameEn'} label="菜名英文" required>
+                        <Input style={{width:150,marginRight:50}}/>
+                    </Form.Item>
                     <Form.Item name={'types'} label="类型" required>
                         <Select
                             mode="multiple"

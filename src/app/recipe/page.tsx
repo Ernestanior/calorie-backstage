@@ -1,13 +1,12 @@
 'use client';
 import React, { FC, Suspense, useCallback, useEffect, useState } from 'react';
-import { Button, Space, Tag, message,Image } from 'antd';
+import { Space, Tag, message,Image } from 'antd';
 import Query from './query';
 import Filter from '@/components/form/filter';
 import FoodCreate from './createRecipe';
 import FoodModify from './modify';
-import { recipeDelete, recipePage } from '@/network/api';
+import { recipeMealItemDelete, recipeMealItemPage } from '@/network/api';
 import PaginatedTable from '@/components/paginatedTable';
-import { img_url } from '@/network';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { mealTypeList } from './config';
 import FoodCoverCreate from './createCover';
@@ -17,6 +16,7 @@ import FoodCoverCreate from './createCover';
 const RecipeContent: FC = () => {
   const searchParams = useSearchParams();
   const recipeSetId = parseInt(searchParams.get('id') as string);
+  const router = useRouter();
   
   const [data, setData] = useState([]);
   const [total, setTotal] = useState(0);
@@ -32,7 +32,7 @@ const RecipeContent: FC = () => {
   const fetchData = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await recipePage({
+      const res = await recipeMealItemPage({
         ...queryParams,
         recipeSetId,
         searchPage: {
@@ -42,9 +42,9 @@ const RecipeContent: FC = () => {
           sort: '',
         },
       });
-      
+
       setData(res.content || []);
-      setTotal(res.totalElements || 0);
+      setTotal(res.total || 0);
     } catch (e) {
       message.error('获取数据失败');
     } finally {
@@ -76,20 +76,15 @@ const RecipeContent: FC = () => {
   };
 
   const onDelete = useCallback(async (id: number) => {
-    await recipeDelete({ id });
+    await recipeMealItemDelete({ id });
     refresh();
-  },[]);
+  }, [refresh]);
 
 
   const columns = [
     {
       title: 'id',
       dataIndex: 'id',
-    },
-    {
-      title: 'type',
-      dataIndex: 'type',
-      render:(value:any)=>value===1?<Tag color={'red'}>菜谱</Tag>:<Tag color={'orange'}>封面</Tag>
     },
     {
       title: '计划id',
@@ -119,30 +114,30 @@ const RecipeContent: FC = () => {
     },
 
     {
-      title: '图',
+      title: '图片',
       dataIndex: 'foodImageUrl',
-      width: 150,
-      render: (url: string,item:any) => {
-        if (url) {
-          return <Image
-        src={img_url + url}
-        alt=""
-        width={150}
-        style={{ height: 'auto' }}
-        preview={{ src: img_url + url }}
-      />
-        }else{
-          return <Image
-          src={img_url + item.previewPhoto}
-          alt=""
-          width={150}
-          style={{ height: 'auto' }}
-          preview={{ src: img_url + item.previewPhoto}}
-        />
-        }
-        
-      }
-        
+      width: 120,
+      render: (url: string, item: any) => {
+        const imageUrl = url || item.previewPhoto;
+        return (
+          <Image
+            src={imageUrl}
+            alt="食谱图片"
+            width={100}
+            height={100}
+            style={{ 
+              height: 100,
+              objectFit: 'cover',
+              borderRadius: 8,
+              border: '1px solid #f0f0f0',
+            }}
+            preview={{ 
+              src: imageUrl,
+              mask: '预览',
+            }}
+          />
+        );
+      },
     },
     {
       title: '份',
@@ -151,8 +146,9 @@ const RecipeContent: FC = () => {
     {
       title: '每份含量',
       dataIndex: 'content',
+      width: 200,
       render: (_: any, item: any) => (
-        <div className="flex flex-col">
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
           <Tag color="magenta">卡路里：{item.foodCaloriesPerUnit}</Tag>
           <Tag color="green">蛋白质：{item.foodCarbsPerUnit}</Tag>
           <Tag color="gold">脂肪：{item.foodFatPerUnit}</Tag>
@@ -163,33 +159,30 @@ const RecipeContent: FC = () => {
     {
       title: '操作',
       key: 'action',
+      width: 150,
+      fixed: 'right' as const,
+      className: 'action-cell',
       render: (_: any, item: any) => (
         <Space size="middle">
-          <div onClick={() => onModify(item)} className="text-blue-500 cursor-pointer">
+          <span 
+            onClick={() => onModify(item)} 
+            className="action-link"
+          >
             修改
-          </div>
-          <div onClick={() => onDelete(item.id)} className="text-blue-500 cursor-pointer">
+          </span>
+          <span 
+            onClick={() => onDelete(item.id)} 
+            className="action-link danger"
+          >
             删除
-          </div>
+          </span>
         </Space>
       ),
     },
   ];
 
   return (
-    <section>
-      <div className="flex mb-4">
-        <Button type="primary" onClick={() => setCreateFlag(true)} className="mr-5">
-          新增食谱
-        </Button>
-        <Button type="primary" onClick={() => setCreateCoverFlag(true)} className="mr-5">
-          生成早中晚餐封面
-        </Button>
-        <Filter submit={handleFilter}>
-          <Query />
-        </Filter>
-      </div>
-
+    <div>
       <PaginatedTable
         columns={columns}
         data={data}
@@ -198,8 +191,39 @@ const RecipeContent: FC = () => {
         pageSize={pageSize}
         onPageChange={handlePageChange}
         loading={loading}
+        layout={{
+          header: {
+            title: '食谱详情管理',
+            description: '管理食谱计划中的具体食谱内容，包括早中晚餐安排',
+          },
+          actions: {
+            primary: {
+              label: '新增食谱',
+              onClick: () => setCreateFlag(true),
+            },
+            secondary: [
+              {
+                label: '查看封面总览',
+                onClick: () => {
+                  if (!Number.isNaN(recipeSetId)) {
+                    // 使用当前 recipeSetId 跳转到封面总览页
+                    router.push(`/recipe/mealCover?id=${recipeSetId}`);
+                  }
+                },
+              },
+              {
+                label: '生成早中晚餐封面',
+                onClick: () => setCreateCoverFlag(true),
+              },
+            ],
+          },
+          filter: (
+            <Filter submit={handleFilter}>
+              <Query />
+            </Filter>
+          ),
+        }}
       />
-
       <FoodCreate
         recipeSetId={recipeSetId}
         visible={createFlag}
@@ -219,7 +243,7 @@ const RecipeContent: FC = () => {
         onCancel={() => setModifyFlag(false)}
         onRefresh={refresh}
       />
-    </section>
+    </div>
   );
 };
 

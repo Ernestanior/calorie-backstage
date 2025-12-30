@@ -6,7 +6,6 @@ import {useForm} from "antd/es/form/Form";
 import ImageUpload from "@/components/ImageUpload";
 import { foodList, heatList, UnitList } from "./config";
 import { RcFile } from "antd/es/upload";
-import { img_url, init_url } from "@/network";
 import Image from "next/image";
 
 interface IProps{
@@ -23,7 +22,11 @@ const FoodModify: FC<IProps> = ({data,visible,onRefresh,onCancel}) => {
 
     useEffect(()=>{
         if(data){
-            form.setFieldsValue({...data})
+            // 后端返回字段为 `type`，表单字段为 `types`，这里做一次映射
+            form.setFieldsValue({
+                ...data,
+                types: (data as any).type ?? (data as any).types,
+            })
         }
         else{
             form.setFieldsValue({status:""})
@@ -33,7 +36,8 @@ const FoodModify: FC<IProps> = ({data,visible,onRefresh,onCancel}) => {
     const onSubmit=async()=>{
         const newData = form.getFieldsValue()
         const {name,types,heat}=newData
-        if(!name || !types || !heat || !image.length){
+        // 修改时不强制要求重新上传图片，只校验必填的基础字段
+        if(!name || !types || !heat){
             setErrMsg('* 请填写完整')
             return 
         }else{
@@ -69,6 +73,9 @@ const FoodModify: FC<IProps> = ({data,visible,onRefresh,onCancel}) => {
             <Form form={form} >
                 <div className="flex flex-row mb-5 items-center">
                     <Form.Item name={'name'} label="菜名">
+                        <Input style={{width:150,marginRight:50}}/>
+                    </Form.Item>
+                    <Form.Item name={'nameEn'} label="菜名英文" required>
                         <Input style={{width:150,marginRight:50}}/>
                     </Form.Item>
                     <Form.Item name={'types'} label="类型">
@@ -158,7 +165,7 @@ const FoodModify: FC<IProps> = ({data,visible,onRefresh,onCancel}) => {
                     </Form.Item>
                 </div>
                 <div className="flex flex-row mb-5">
-                    <Image alt="" src={img_url+data.imageUrl} width={100} height={100} />
+                    <Image alt="" src={data.imageUrl} width={100} height={100} />
                     <div className="text-sm font-bold ml-15 mr-5">修改图片</div>
                     <ImageUpload changePic={setImage} maxCount={1} ></ImageUpload>
                 </div>

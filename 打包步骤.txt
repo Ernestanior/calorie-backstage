@@ -1,0 +1,9 @@
+1. 新建next.config.ts, 在 next.config.js 里添加：
+    module.exports = {
+        output: 'standalone',
+    };
+2. npm run build        
+
+3. 打开.next/standalone
+
+4. zip standalone整个文件发给后端

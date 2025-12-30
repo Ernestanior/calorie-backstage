@@ -16,21 +16,52 @@ const Filter:FC<ISubmitModule> = ({submit, children}) => {
     }, [form, submit])
 
 
-    return <Form form={form} style={{width:"80%"}} >
-        <Row gutter={[15, 15]}>
-            {children}
-            <Col span={3}>
-                <Space>
-                    <Button type="primary" onClick={submitEvent}>
-                        查询
-                    </Button>
-                    <Button onClick={() => { form.resetFields(); }}>
-                        重置
-                    </Button>
-                </Space>
-            </Col>
+    return (
+      <Form form={form} style={{ width: "100%" }}>
+        <Row gutter={[16, 16]} align="middle" wrap>
+          {children}
+          <Col
+            flex="auto"
+            style={{
+              display: 'flex',
+              justifyContent: 'flex-end',
+              alignItems: 'center',
+              minWidth: 220,
+            }}
+          >
+            <Space align="center">
+              <Button 
+                type="primary" 
+                onClick={submitEvent}
+                style={{
+                  height: 40,
+                  paddingLeft: 24,
+                  paddingRight: 24,
+                  fontWeight: 500,
+                }}
+              >
+                查询
+              </Button>
+              <Button 
+                onClick={() => { 
+                  form.resetFields(); 
+                  submit && submit({});
+                }}
+                style={{
+                  height: 40,
+                  paddingLeft: 24,
+                  paddingRight: 24,
+                  fontWeight: 500,
+                  borderColor: 'var(--border)',
+                }}
+              >
+                重置
+              </Button>
+            </Space>
+          </Col>
         </Row>
-    </Form>
+      </Form>
+    )
 }
 
 export default Filter;

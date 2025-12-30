@@ -1,7 +1,7 @@
 'use client'
 import React, { FC, useState } from "react";
 import { Button, Drawer, Form, InputNumber, Select } from "antd";
-import { recipeCreate } from "@/network/api";
+import { recipeMealItemCreate } from "@/network/api";
 import { useForm } from "antd/es/form/Form";
 import { mealTypeList } from "./config";
 
@@ -26,7 +26,13 @@ const FoodCreate: FC<IProps> = ({ recipeSetId,visible, onRefresh, onCancel }) =>
         } else {
             setErrMsg('')
         }
-        const res = await recipeCreate({...newData,recipeSetId,type:1})
+        const res = await recipeMealItemCreate({
+            recipeSetId,
+            day,
+            mealType,
+            foodNutritionId,
+            quantity,
+        })
         console.log(res);
         onCancel()
         onRefresh()

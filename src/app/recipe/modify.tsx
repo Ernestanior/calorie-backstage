@@ -1,7 +1,7 @@
 'use client'
 import React, { FC, useEffect, useState } from "react";
 import { Button, Drawer, Form, Input, InputNumber, Select } from "antd";
-import { recipeModify, recipeSetCreate } from "@/network/api";
+import { recipeMealItemModify } from "@/network/api";
 import { useForm } from "antd/es/form/Form";
 import { mealTypeList } from "./config";
 
@@ -29,16 +29,23 @@ const FoodCreate: FC<IProps> = ({ visible, onRefresh, onCancel,data,recipeSetId 
 
     const onSubmit = async () => {
         const newData = form.getFieldsValue()
-        
-        // const { day,mealType,foodNutritionId,quantity} = newData
-        
-        // if ( !day || !mealType || !foodNutritionId || !quantity) {
-        //     setErrMsg('* 请填写完整')
-        //     return
-        // } else {
-        //     setErrMsg('')
-        // }
-        const res = await recipeModify({...newData,recipeSetId})
+        const { id, day, mealType, foodNutritionId, quantity } = newData
+
+        if (!id || !day || !mealType || !foodNutritionId || !quantity) {
+            setErrMsg('* 请填写完整')
+            return
+        } else {
+            setErrMsg('')
+        }
+
+        const res = await recipeMealItemModify({
+            id,
+            recipeSetId,
+            day,
+            mealType,
+            foodNutritionId,
+            quantity,
+        })
         console.log(res);
         onCancel()
         onRefresh()
